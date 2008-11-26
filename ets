@@ -1,14 +1,31 @@
 #!/usr/bin/python
 #
-#  ets - The Easy Template System
+#  ets - An Easy Template System
 #
+#      Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
+#
+#
+#  * Normal assignment cannot have newlines
+#  * Newline code of heredoc must be converted to same as
+#    that of template.
+#
+#    LINE   := COMMENT | ASSIGN | HEREDOC_ASSIGN | HEREDOC_EOL | HEREDOC_CONTENT
+#    ASSIGN := VAR '=' VAL [COMMENT]
+#    VAR    := [A-Z][A-Z0-9_]*
+#    VAL    := ".*" | '.*' | .*
+#
+VERSION=(0,1)
 
+import optparse
 import sys
 import re
 import string
 
 
-REGEX_VALID_VARVAL = re.compile('^\s*[A-Z][A-Z0-9_]*\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
+
+REGEX_VALID_HEREDOC = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*<<[A-Z0-9_]$')
+REGEX_VALID_ASSIGN = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
+
 
 
 class InvalidFormatException(Exception):
@@ -26,10 +43,7 @@ def read_values(filedes):
         ## This makes parsing of config file complex.
         ## Acctually, properly handle quote and comment is beyond regex...
         #line = re.sub("#.*$","",line)
-        if re.search(REGEX_VALID_VARVAL, line):
-            ## str.partition is after Python2.5
-            #name, separator, value = line.partition('=')
-            ## ...and using split instead to be Python2.4-friendly.
+        if re.search(REGEX_VALID_ASSIGN, line):
             name, value = line.split('=', 1)
             name = name.strip()
             value = value.strip()
@@ -48,30 +62,49 @@ def read_values(filedes):
     return defined_variables
 
 
+def DIE(msg):
+    sys.stderr.write("%s: ERROR: %s\n" % (sys.argv[0], msg))
+    sys.exit(1)
 
 if __name__ == "__main__":
+    ##
+    ## Option Parser
+    ##
+    parser = optparse.OptionParser(
+        usage="%prog [OPTIONS] CONFIG [TEMPLATE]",
+        version=("%%prog (Easy Template System) %d.%d" % VERSION) )
+
+    parser.add_option("-i", "--ignore-undef",
+                            action="store_true",
+                            help="Ignore undefined variables in template")
+    parser.add_option("-o", "--overwrite",
+                            action="store_true",
+                            help="Overwrite existing output file")
+
+    (opt, args) = parser.parse_args(sys.argv)
+
     if len(sys.argv) < 2:
-        sys.stderr.write("Usage: %s CONFIG [INFILE]\n" % sys.argv[0])
-        sys.exit(1)
+        DIE("too few arguments")
+
+
+    ##
+    ## Read config file
+    ##
+    configfd = open(sys.argv[1], 'r')
+    try:
+        variables = read_values(configfd)
+    except InvalidFormatException, e:
+        DIE(e.message);
+    configfd.close()
+
+    if len(variables.keys()) is 0:
+        DIE("no variables defined in config file: %s" % sys.argv[1]);
+
+    if len(sys.argv) == 3 and sys.argv[2] != '-':
+        infd = open(sys.argv[2], 'r')
     else:
-        configfd = open(sys.argv[1], 'r')
-        try:
-            variables = read_values(configfd)
-        except InvalidFormatException, e:
-            sys.stderr.write(sys.argv[0] + ": ERROR: " + e.message + "\n")
-            sys.exit(1)
-        configfd.close()
+        infd = sys.stdin
 
-        if len(variables.keys()) is 0:
-            sys.stderr.write(sys.argv[0] + ": ERROR: no variables defined in config file: "\
-                             + sys.argv[1] + "\n");
-            sys.exit(1)
-
-        if len(sys.argv) == 3 and sys.argv[2] != '-':
-            infd = open(sys.argv[2], 'r')
-        else:
-            infd = sys.stdin
-
-        templ = string.Template(infd.read())
-        sys.stdout.write( templ.substitute(variables) )
+    templ = string.Template(infd.read())
+    sys.stdout.write( templ.substitute(variables) )
 

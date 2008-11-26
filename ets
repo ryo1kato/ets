@@ -27,7 +27,10 @@ def read_values(filedes):
         ## Acctually, properly handle quote and comment is beyond regex...
         #line = re.sub("#.*$","",line)
         if re.search(REGEX_VALID_VARVAL, line):
-            name, separator, value = line.partition('=')
+            ## str.partition is after Python2.5
+            #name, separator, value = line.partition('=')
+            ## ...and using split instead to be Python2.4-friendly.
+            name, value = line.split('=', 1)
             name = name.strip()
             value = value.strip()
             if re.match('^".*[^\\\\]"$', value):

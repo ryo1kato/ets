@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2008/11/27 21:30:51.
+#                               Last Change: 2008/11/28 10:29:34.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -17,7 +17,7 @@
 #    Config:
 #        | WHO = brown fox
 #        | WHOM =    " the lazy dog"
-#        | HEREDOC = <<EOL
+#        | HEREDOC =<< EOL
 #        | This is
 #        | multi line
 #        | definition using heredoc syntax.
@@ -46,9 +46,11 @@
 #    ---- v0.2 ----
 #    * Basic test cases
 #    * Heredoc support (basic)
+#    * Heredoc support (indent support: <<-EOF )
 #    * Heredoc support (smart newline handling)
-#    * Line-end comment support
 #    ---- v0.3 ----
+#    * Line-end comment support
+#    * Multiple config files
 #    * Error test cases
 #    * Single-quote support
 #    * BNF syntax and documentation
@@ -66,7 +68,7 @@ import string
 
 
 
-REGEX_VALID_HEREDOC = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*<<\s*[A-Z][A-Za-z0-9_]*\s*$')
+REGEX_VALID_HEREDOC = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*<<\s*[A-Z][A-Za-z0-9_]*\s*$')
 REGEX_VALID_ASSIGN = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
 
 
@@ -109,21 +111,9 @@ def read_values(filedes):
         if re.search("(^$|^#)", line):
             continue
 
-        if re.search(REGEX_VALID_ASSIGN, line):
-            name, value = line.split('=', 1)
-            name = name.strip()
-            value = value.strip()
-            if re.match('^".*[^\\\\]"$', value):
-                value = re.sub("^\"|\"$", "", value)
-            value = re.sub('\\\\"', '"', value)
-            if name not in defined_variables:
-                defined_variables[name] = value
-            else:
-                raise InvalidFormatException(
-                    "line %d: valiable %s already defined at %d"
-                    % (lineno, name, defined_variables[name]) )
-        elif re.search(REGEX_VALID_HEREDOC, line):
-            name, eof_mark= line.split('<<', 1)
+        if re.search(REGEX_VALID_HEREDOC, line):
+            line = re.sub('=\s*<<', '=<<', line)
+            name, eof_mark= line.split('=<<', 1)
             name = name.strip()
             eof_mark = eof_mark.strip()
             heredoc = ""
@@ -137,6 +127,19 @@ def read_values(filedes):
                 else:
                     heredoc += line
                 defined_variables[name] = heredoc
+        elif re.search(REGEX_VALID_ASSIGN, line):
+            name, value = line.split('=', 1)
+            name = name.strip()
+            value = value.strip()
+            if re.match('^".*[^\\\\]"$', value):
+                value = re.sub("^\"|\"$", "", value)
+            value = re.sub('\\\\"', '"', value)
+            if name not in defined_variables:
+                defined_variables[name] = value
+            else:
+                raise InvalidFormatException(
+                    "line %d: valiable %s already defined at %d"
+                    % (lineno, name, defined_variables[name]) )
         else:
             raise InvalidFormatException("line %d: invalid syntax for var=val assignment." % lineno)
 
@@ -155,23 +158,23 @@ if __name__ == "__main__":
         usage="%prog [OPTIONS] CONFIG [TEMPLATE]",
         version=("%%prog (Easy Template System) %d.%d" % VERSION) )
 
-    #parser.add_option("-i", "--ignore-undef",
-    #                        action="store_true",
-    #                        help="(NIY) Ignore undefined variables in template")
+    parser.add_option("-i", "--ignore-undef",
+                            action="store_true",
+                            help="Ignore undefined variables in template")
     #parser.add_option("-o", "--overwrite",
     #                        action="store_true",
-    #                        help="(NIY) Overwrite existing output file")
+    #                        help="Overwrite existing output file")
 
     (opt, args) = parser.parse_args(sys.argv)
 
-    if len(sys.argv) < 2:
+    if len(args) < 2:
         DIE("too few arguments")
 
 
     ##
     ## Read config file
     ##
-    configfd = open(sys.argv[1], 'r')
+    configfd = open(args[1], 'r')
     try:
         variables = read_values(configfd)
     except InvalidFormatException, e:
@@ -181,11 +184,14 @@ if __name__ == "__main__":
     if len(variables.keys()) is 0:
         DIE("no variables defined in config file: %s" % sys.argv[1]);
 
-    if len(sys.argv) == 3 and sys.argv[2] != '-':
-        infd = open(sys.argv[2], 'r')
+    if len(args) == 3 and args[2] != '-':
+        infd = open(args[2], 'r')
     else:
         infd = sys.stdin
 
     templ = string.Template(infd.read())
-    sys.stdout.write( templ.substitute(variables) )
+    if opt.ignore_undef:
+        sys.stdout.write( templ.safe_substitute(variables) )
+    else:
+        sys.stdout.write( templ.substitute(variables) )
 

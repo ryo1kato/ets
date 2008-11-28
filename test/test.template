@@ -19,3 +19,4 @@ ${HEREDOC1}
 ${HEREDOC2}
 -- heredoc 3 --
 ${HEREDOC3}
+---------------

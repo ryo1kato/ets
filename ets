@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2008/11/28 10:29:34.
+#                               Last Change: 2009/05/06 00:31:15.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -13,6 +13,10 @@
 #    script like syntax.  It takes two input files: config and template, and
 #    substitute all variable symbols in template file like "${VAR}" with the
 #    value defined in config file.
+#
+#    Template filename also could be specified by a special variable
+#    __TEMPLATE_FILE__ defined in CONFIG, but superseded by command line
+#    argument.
 #
 #    Config:
 #        | WHO = brown fox
@@ -33,43 +37,44 @@
 #        | multi line
 #        | definition using heredoc syntax.
 #
-# SYNTAX (Incomplete)
-#    LINE   := COMMENT | ASSIGN | HEREDOC_ASSIGN | HEREDOC_EOL | HEREDOC_CONTENT
-#    ASSIGN := VAR '=' VAL [COMMENT]
-#    VAR    := [A-Z][A-Z0-9_]*
-#    VAL    := ".*" | .*
-#
 # HISTORY
 #    ---- v0.1 ----
+#    * Initial version, same as used for NV-U44(NA) release pages.
 #
-# ROADMAP
 #    ---- v0.2 ----
 #    * Basic test cases
 #    * Heredoc support (basic)
-#    * Heredoc support (indent support: <<-EOF )
-#    * Heredoc support (smart newline handling)
+#    * '-i' option for ignore error for undefined reference.
+#
+# ROADMAP
 #    ---- v0.3 ----
+#    * Heredoc support (smart newline handling)
 #    * Line-end comment support
-#    * Multiple config files
 #    * Error test cases
+#    * Embedded template filename in configuration file.
+#    * Config/Template composite file.
+#    ---- v0.4 ----
 #    * Single-quote support
 #    * BNF syntax and documentation
-#    ---- v0.4 ----
+#    * (Japanese) Char-code autodetect and conversion
+#    * Heredoc support (indent support: <<-EOF )
+#    * Multiple config files
 #    * Oneline config support
 #    * Sophisticated error handling and report
 #
 
-VERSION=(0,1)
+VERSION=(0,2)
 
 import optparse
 import sys
 import re
+import os
 import string
 
 
 
 REGEX_VALID_HEREDOC = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*<<\s*[A-Z][A-Za-z0-9_]*\s*$')
-REGEX_VALID_ASSIGN = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
+REGEX_VALID_ASSIGN = re.compile('^\s*([A-Za-z][A-Za-z0-9_]*|__TEMPLATE_FILE__)\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
 
 
 
@@ -150,6 +155,11 @@ def DIE(msg):
     sys.stderr.write("%s: ERROR: %s\n" % (sys.argv[0], msg))
     sys.exit(1)
 
+
+def WARNING(msg):
+    sys.stderr.write("%s: WARNING: %s\n" % (sys.argv[0], msg))
+
+
 if __name__ == "__main__":
     ##
     ## Option Parser
@@ -174,18 +184,33 @@ if __name__ == "__main__":
     ##
     ## Read config file
     ##
-    configfd = open(args[1], 'r')
+    configpath = args[1]
+    configfd = open(configpath, 'r')
     try:
         variables = read_values(configfd)
     except InvalidFormatException, e:
-        DIE(e.message);
+        DIE("Config file error: " + e.message);
     configfd.close()
 
     if len(variables.keys()) is 0:
         DIE("no variables defined in config file: %s" % sys.argv[1]);
 
     if len(args) == 3 and args[2] != '-':
+        if variables.has_key("__TEMPLATE_FILE__"):
+            WARNING('__TEMPLATE_FILE__ is defined in %s' % configpath)
         infd = open(args[2], 'r')
+    elif variables.has_key("__TEMPLATE_FILE__"):
+        template_path = ""
+        template_name = variables['__TEMPLATE_FILE__']
+        template_name_rel = os.path.join(os.path.dirname(configpath), template_name)
+        if os.path.exists(template_name):
+            template_path = template_name
+        elif os.path.exists( template_name_rel ):
+            template_path = template_name_rel
+        else:
+            template_path = template_name
+
+        infd = open(template_path, 'r')
     else:
         infd = sys.stdin
 

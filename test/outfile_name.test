@@ -1,0 +1,14 @@
+option="--outfile-in-config"
+
+outfile_name_teardown ()
+{
+    echo "---- outfile_name.out ----"
+    cat $TESTDATA/outfile_name.out
+    echo "--------------------------"
+
+    diff -u $TESTDATA/outfile_name.out $TESTDATA/outfile_name.expected
+    ret=$?
+    rm -f $TESTDATA/outfile_name.out
+
+    return $?
+}

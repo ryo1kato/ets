@@ -1,0 +1,5 @@
+template file is "${__TEMPLATE_FILE__}"
+this file is "${__OUTPUT_FILE__}"
+
+Quick ${WHO} jumped over${WHOM}.
+Heredoc sample: ${HEREDOC}

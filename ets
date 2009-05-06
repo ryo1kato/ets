@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/06 00:31:15.
+#                               Last Change: 2009/05/06 12:44:53.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -46,13 +46,18 @@
 #    * Heredoc support (basic)
 #    * '-i' option for ignore error for undefined reference.
 #
+#    ---- v0.3 ----
+#    * Embedded template filename in configuration file.
+#    * Embedded output filename in configuration file.
+#
 # ROADMAP
 #    ---- v0.3 ----
+#    * Windows/Double-Click capable
 #    * Heredoc support (smart newline handling)
 #    * Line-end comment support
 #    * Error test cases
-#    * Embedded template filename in configuration file.
 #    * Config/Template composite file.
+#
 #    ---- v0.4 ----
 #    * Single-quote support
 #    * BNF syntax and documentation
@@ -72,16 +77,22 @@ import os
 import string
 
 
-
 REGEX_VALID_HEREDOC = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*<<\s*[A-Z][A-Za-z0-9_]*\s*$')
-REGEX_VALID_ASSIGN = re.compile('^\s*([A-Za-z][A-Za-z0-9_]*|__TEMPLATE_FILE__)\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
+REGEX_VALID_ASSIGN = re.compile('^\s*([A-Za-z][A-Za-z0-9_]*|__TEMPLATE_FILE__|__OUTPUT_FILE__)\s*=\s*(".*[^\\\\]"|[^"].*[^"]|.*\\\\")\s*$')
 
 
-
+##
+## Exception object for invalid config-file format
+##
 class InvalidFormatException(Exception):
     def __init__(self, message):
         self.message = message
 
+##
+## A peek-able line-oriented file object.
+## Supporting line-number counint used to parse config-file,
+## to makes it easy to report syntax error in config with line number.
+##
 class ConfigLines:
     def __init__(self, filedes):
         self.config_lines = filedes.readlines()
@@ -102,7 +113,9 @@ class ConfigLines:
             line = self.config_lines[0]
             return ( self.lineno, line )
 
-
+##
+## Read configuration file and returns a key-value pair as dictionary.
+##
 def read_values(filedes):
     defined_variables = dict()
     config = ConfigLines(filedes)
@@ -151,10 +164,12 @@ def read_values(filedes):
     return defined_variables
 
 
+##
+## Messaging wrapper.
+##
 def DIE(msg):
     sys.stderr.write("%s: ERROR: %s\n" % (sys.argv[0], msg))
     sys.exit(1)
-
 
 def WARNING(msg):
     sys.stderr.write("%s: WARNING: %s\n" % (sys.argv[0], msg))
@@ -189,6 +204,7 @@ if __name__ == "__main__":
     try:
         variables = read_values(configfd)
     except InvalidFormatException, e:
+    #except InvalidFormatException as e:  #for Python3000
         DIE("Config file error: " + e.message);
     configfd.close()
 
@@ -196,10 +212,10 @@ if __name__ == "__main__":
         DIE("no variables defined in config file: %s" % sys.argv[1]);
 
     if len(args) == 3 and args[2] != '-':
-        if variables.has_key("__TEMPLATE_FILE__"):
+        if "__TEMPLATE_FILE__" in variables:
             WARNING('__TEMPLATE_FILE__ is defined in %s' % configpath)
         infd = open(args[2], 'r')
-    elif variables.has_key("__TEMPLATE_FILE__"):
+    elif "__TEMPLATE_FILE__" in variables:
         template_path = ""
         template_name = variables['__TEMPLATE_FILE__']
         template_name_rel = os.path.join(os.path.dirname(configpath), template_name)
@@ -214,9 +230,12 @@ if __name__ == "__main__":
     else:
         infd = sys.stdin
 
+
+    outfd = sys.stdout
+
     templ = string.Template(infd.read())
     if opt.ignore_undef:
-        sys.stdout.write( templ.safe_substitute(variables) )
+        outfd.write( templ.safe_substitute(variables) )
     else:
-        sys.stdout.write( templ.substitute(variables) )
+        outfd.write( templ.substitute(variables) )
 

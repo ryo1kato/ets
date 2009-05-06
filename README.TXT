@@ -1,7 +1,7 @@
 ets - an Easy Template System
 
                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-                              Last Change: 2009/05/07 03:38:22.
+                              Last Change: 2009/05/07 03:58:13.
 
 USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
    Use '--help' option for more detail.
@@ -52,7 +52,7 @@ HISTORY
    ---- v0.3 ----
    * Embedded template filename in configuration file.
    * Embedded output filename in configuration file.
-   * Windows double-click/drag'n-drop support (using .bat file)
+   * Windows double-click/drag-and-drop support (using ets.bat)
    * Error test cases
 
 ROADMAP

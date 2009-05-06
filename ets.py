@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/06 15:51:09.
+#                               Last Change: 2009/05/07 03:19:07.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -50,16 +50,16 @@
 #    * Embedded template filename in configuration file.
 #    * Embedded output filename in configuration file.
 #    * Windows double-click/drag'n-drop support (using .bat file)
+#    * Error test cases
 #
 # ROADMAP
-#    ---- v0.3 ----
+#    ---- v0.4 ----
 #    * Recursive variable expansion
 #    * Heredoc support (smart newline handling)
 #    * Line-end comment support
-#    * Error test cases
 #    * Config/Template composite file.
 #
-#    ---- v0.4 ----
+#    ---- v0.5 ----
 #    * Single-quote support
 #    * BNF syntax and documentation
 #    * (Japanese) Char-code autodetect and conversion

@@ -1,6 +1,6 @@
 option="--outfile-in-config"
 
-outfile_name_teardown ()
+teardown ()
 {
     echo "---- outfile_name.out ----"
     cat $TESTDATA/outfile_name.out

@@ -1,1 +1,6 @@
 option="--template-in-config"
+
+teardown ()
+{
+    grep -q "ERROR: __TEMPLATE_FILE__ is not defined" $stderr
+}

@@ -1,1 +1,6 @@
 option="--outfile-in-config"
+
+teardown ()
+{
+    grep -q "ERROR: __OUTPUT_FILE__ is not defined" $stderr
+}

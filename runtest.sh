@@ -63,6 +63,9 @@ runtest ()
 
     (
         echo "TestCase $testname"
+        export testname=$testname
+        export stdout="out-$testname.stdout"
+        export stderr="out-$testname.stderr"
 
         # this set -e doesn't work... Why?
         #set -e
@@ -76,10 +79,10 @@ runtest ()
             . $TESTDIR/$testname.test
         fi
 
-        if is_defined ${testname}_setup
+        if is_defined setup
         then
-            echo "Using function ${testname}_setup()"
-            ${testname}_setup || exit 1
+            echo "Using function setup()"
+            setup || exit 1
         fi
 
         [ -z $config ] && search_and_use $testname config || exit 1
@@ -90,24 +93,23 @@ runtest ()
         ##
         cmdline="$PYTHON ./ets.py ${option} ${config} ${template}"
         echo $cmdline
-        $cmdline 1> out-$testname.stdout \
-                 2> out-$testname.stderr
+        $cmdline 1> $stdout 2> $stderr
         command_ret=$?
 
         echo "--- stdout ----"
-        cat out-$testname.stdout
+        cat $stdout
         echo "--- stderr ----"
-        cat out-$testname.stderr
+        cat $stderr
         echo "---------------"
 
 
         ##
         ## Tear-down
         ##
-        if is_defined ${testname}_teardown
+        if is_defined teardown
         then
-            echo "Using function ${testname}_teardown()"
-            ${testname}_teardown $command_ret
+            echo "Using function teardown()"
+            teardown $command_ret
         else
             echo "Using default teardown(diff)"
             if [ "$opt_fail" = yes ]; then
@@ -125,10 +127,8 @@ runtest ()
         fi
         teardown_ret=$?
 
-
         rm -f out-$testname.stdout
         rm -f out-$testname.stderr
-
 
         exit $teardown_ret
     )

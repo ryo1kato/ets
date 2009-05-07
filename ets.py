@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/08 01:36:28.
+#                               Last Change: 2009/05/08 02:22:12.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -16,6 +16,9 @@ import sys
 import re
 import os
 import string
+
+import Tkinter
+import tkMessageBox
 
 
 REGEX_VALID_HEREDOC = re.compile('^\s*[A-Za-z][A-Za-z0-9_]*\s*=\s*<<\s*[A-Z][A-Za-z0-9_]*\s*$')
@@ -108,12 +111,34 @@ def read_values(filedes):
 ##
 ## Messaging wrapper.
 ##
-def DIE(msg):
-    sys.stderr.write("%s: ERROR: %s\n" % (sys.argv[0], msg))
-    sys.exit(1)
+class MSG:
+    def __init__(self, gui=False):
+        self.gui=gui
+        root = Tkinter.Tk()
+        root.withdraw()
 
-def WARNING(msg):
-    sys.stderr.write("%s: WARNING: %s\n" % (sys.argv[0], msg))
+    def INFO(self, msg):
+        if self.gui:
+            tkMessageBox.showinfo('ets', msg)
+        else:
+            pass
+
+    def WARNING(self, msg):
+        if self.gui:
+            tkMessageBox.showwarning('ets: WARNING', msg)
+        else:
+            sys.stderr.write("%s: WARNING: %s\n" % (sys.argv[0], msg))
+
+    def ERROR(self, msg):
+        if self.gui:
+            tkMessageBox.showerror('ets: ERROR', msg)
+        else:
+            sys.stderr.write("%s: ERROR: %s\n" % (sys.argv[0], msg))
+
+    def DIE(self, msg):
+        self.ERROR(msg)
+        sys.exit(1)
+
 
 
 if __name__ == "__main__":
@@ -143,9 +168,9 @@ if __name__ == "__main__":
              "and path is relative to current directory rather than config file.",
         metavar="FILE")
 
-    #parser.add_option("-g", "--gui",
-    #    action="store_true",
-    #    help="Show message and errors in GUI")
+    parser.add_option("-g", "--gui",
+        action="store_true",
+        help="Show message and errors in GUI")
 
     parser.add_option("-W", "--overwrite",
         action="store_true",
@@ -153,11 +178,14 @@ if __name__ == "__main__":
 
     (opt, args) = parser.parse_args(sys.argv)
 
+    msg = MSG(opt.gui)
+
     if len(args) < 2:
-        DIE("too few arguments")
+        msg.DIE("too few arguments")
 
     if len(args) > 3:
-        DIE("too many arguments")
+        msg.DIE("too many arguments")
+
 
     ##
     ## Read config file
@@ -168,11 +196,11 @@ if __name__ == "__main__":
         variables = read_values(configfd)
     except InvalidFormatException, e:
     #except InvalidFormatException as e:  #for Python3000
-        DIE("Config file error: " + e.message);
+        msg.DIE("Config file error: " + e.message);
     configfd.close()
 
     if len(variables.keys()) is 0:
-        DIE("no variables defined in config file: %s" % sys.argv[1]);
+        msg.DIE("no variables defined in config file: %s" % sys.argv[1]);
 
 
     ##
@@ -184,15 +212,15 @@ if __name__ == "__main__":
     ##
 
     if opt.template_in_config and "__TEMPLATE_FILE__" not in variables:
-        DIE("__TEMPLATE_FILE__ is not defined in %s" % configpath)
+        msg.DIE("__TEMPLATE_FILE__ is not defined in %s" % configpath)
 
     if len(args) == 3:
         if opt.template_in_config:
-            DIE("Can't pass template filename(%s) in arugument when"
+            msg.DIE("Can't pass template filename(%s) in arugument when"
                 "--template-in-config option is enabled" % args[2])
         else:
             if "__TEMPLATE_FILE__" in variables:
-                WARNING("Ignoring __TEMPLATE_FILE__ defined in %s" % configpath)
+                msg.WARNING("Ignoring __TEMPLATE_FILE__ defined in %s" % configpath)
             if args[2] != '-':
                 infd = open(args[2], 'r')
             else:
@@ -207,7 +235,7 @@ if __name__ == "__main__":
         elif os.path.exists( template_name_abs ):
             template_path = template_name_abs
         else:
-            DIE("Can't open template file: %s" % template_name)
+            msg.DIE("Can't open template file: %s" % template_name)
 
         infd = open(template_path, 'r')
     else:
@@ -223,27 +251,30 @@ if __name__ == "__main__":
     ##
     def check_overwrite_and_open(path, flags):
         if not opt.overwrite and os.path.exists(path):
-            DIE("output file %s already exists" % path)
+            msg.DIE("output file %s already exists" % path)
         else:
             return open(path, flags)
 
     if "__OUTPUT_FILE__" in variables:
         if opt.outfile is not None:
             if opt.outfile_in_config:
-                DIE("Can't pass output filename(--outfile)"
+                msg.DIE("Can't pass output filename(--outfile)"
                     "when --outfile-in-config option is enabled")
             else:
-                WARNING("__OUTPUT_FILE__ is overridden by --outfile option")
+                msg.WARNING("__OUTPUT_FILE__ is overridden by --outfile option")
             outfd = check_overwrite_and_open(opt.outfile, 'w')
+            outfile_used = opt.outfile
         else:
             output_file = variables['__OUTPUT_FILE__']
             if not os.path.isabs(output_file):
                 output_file = os.path.join(os.path.dirname(configpath), output_file)
             outfd = check_overwrite_and_open(output_file, 'w')
+            outfile_used = output_file
     elif opt.outfile_in_config:
-        DIE("__OUTPUT_FILE__ is not defined in %s" % configpath)
+        msg.DIE("__OUTPUT_FILE__ is not defined in %s" % configpath)
     else:
         outfd = sys.stdout
+        outfile_used = "standard output"
 
 
     ##
@@ -256,3 +287,4 @@ if __name__ == "__main__":
     else:
         outfd.write( templ.substitute(variables) )
 
+    msg.INFO("Success.\n(Output: %s)" % outfile_used)

@@ -1,0 +1,7 @@
+option="--outfile-in-config -O $testname.out"
+my_error_message="ERROR: Can't pass output filename(--outfile)when --outfile-in-config option is enabled"
+
+teardown ()
+{
+    grep -q -- "$my_error_message" $stderr
+}

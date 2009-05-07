@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/07 03:57:46.
+#                               Last Change: 2009/05/08 00:52:36.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -138,9 +138,18 @@ if __name__ == "__main__":
         help="Assume __OUTPUT_FILE__ is defined in config."
              "Report error otherwise.")
 
-    #parser.add_option("-O", "--overwrite",
-    #    action="store_true",
-    #    help="Overwrite existing output file.")
+    parser.add_option("-O", "--outfile", dest="outfile",
+        help="Write output to FILE. Overwriding __OUTPUT_FILE__"
+             "and path is relative to current directory rather than config file.",
+        metavar="FILE")
+
+    parser.add_option("-g", "--gui",
+        action="store_true",
+        help="Show message and errors in GUI")
+
+    parser.add_option("-W", "--overwrite",
+        action="store_true",
+        help="Overwrite existing output file.")
 
     (opt, args) = parser.parse_args(sys.argv)
 
@@ -179,8 +188,8 @@ if __name__ == "__main__":
 
     if len(args) == 3:
         if opt.template_in_config:
-            DIE("can't pass template filename(%s) in arugument and"
-                "--template-in-config option at the same time" % args[2])
+            DIE("Can't pass template filename(%s) in arugument when"
+                "--template-in-config option is enabled" % args[2])
         else:
             if "__TEMPLATE_FILE__" in variables:
                 WARNING("Ignoring __TEMPLATE_FILE__ defined in %s" % configpath)
@@ -208,13 +217,23 @@ if __name__ == "__main__":
     ##
     ## Determine output filename (it's stdout unless __OUTPUT_FILE__ is defined).
     ##   if __OUTPUT_FILE__ is relative, it consider to be relative to the directory
-    ##   which configuration file resides.
+    ##   in which configuration file resides.
+    ##   If --outfile option is given, it supersedes __OUTPUT_FILE__, and consider to
+    ##   relative to current directory.
     ##
     if "__OUTPUT_FILE__" in variables:
-        output_file = variables['__OUTPUT_FILE__']
-        if not os.path.isabs(output_file):
-            output_file = os.path.join(os.path.dirname(configpath), output_file)
-        outfd = open(output_file, 'w')
+        if opt.outfile is not None:
+            if opt.outfile_in_config:
+                DIE("Can't pass output filename(--outfile)"
+                    "when --outfile-in-config option is enabled")
+            else:
+                WARNING("__OUTPUT_FILE__ is overridden by --outfile option")
+            outfd = open(opt.outfile, 'w')
+        else:
+            output_file = variables['__OUTPUT_FILE__']
+            if not os.path.isabs(output_file):
+                output_file = os.path.join(os.path.dirname(configpath), output_file)
+            outfd = open(output_file, 'w')
     elif opt.outfile_in_config:
         DIE("__OUTPUT_FILE__ is not defined in %s" % configpath)
     else:

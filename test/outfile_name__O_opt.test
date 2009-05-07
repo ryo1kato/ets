@@ -1,0 +1,9 @@
+option="-O $testname.out"
+
+teardown ()
+{
+    diff -u $testname.out $TESTDATA/${testname%__*}.expected
+    ret=$?
+    rm -f $testname.out
+    return $ret
+}

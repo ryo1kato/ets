@@ -19,12 +19,12 @@
 ##    4. "foo.config" is searched.
 ##
 
-TEST_CASES="basic undef template_name outfile_name outfile_name__O_opt"
-TEST_CASES_FAIL="basic__t_opt basic__o_opt undef__fail outfile_name__O_and_o_opt"
+TEST_CASES="basic undef template_name outfile_name outfile_name__O_opt outfile_name__overwrite"
+TEST_CASES_FAIL="basic__t_opt basic__o_opt undef__fail outfile_name__O_and_o_opt outfile_name__overwrite_no_W"
 
 PYTHON="python2.5"
 TESTDIR="./test"
-TESTDATA="./test"
+TESTDATA="./test/data"
 
 
 ##############################################################################
@@ -34,7 +34,7 @@ is_defined ()
     type $1 > /dev/null 2>&1
 }
 
-search_and_use ()
+search_file_and_use ()
 {
     local testname=$1
     local type=$2
@@ -43,8 +43,10 @@ search_and_use ()
     local super="$TESTDATA/${testname%__*}.$type"
 
     if [ -e $fullname ]; then
+        echo "Using $type=$fullname"
         eval $type=$fullname
     elif [ -e $super ]; then
+        echo "Using $type=$super"
         eval $type=$super
     else
         echo "ERROR: coudn't find *.$type file for $testname"
@@ -77,22 +79,27 @@ runtest ()
         then
             echo "Using file $testname.test"
             . $TESTDIR/$testname.test
+        else
+            echo "No testcase config found: Trying default."
         fi
 
         if is_defined setup
         then
             echo "Using function setup()"
-            setup || exit 1
+            setup || exit 2
         fi
 
-        [ -z $config ] && search_and_use $testname config || exit 1
-        [ -z $template ] && search_and_use $testname template || exit 1
+        [ -z $config ] && search_file_and_use $testname config || exit 1
+        [ -z $template ] && search_file_and_use $testname template || exit 1
+        if [ "$opt_fail" != "yes" ] && ! is_defined teardown; then
+            [ -z $expected ] && search_file_and_use $testname expected || exit 1
+        fi
 
         ##
         ## Execute
         ##
         cmdline="$PYTHON ./ets.py ${option} ${config} ${template}"
-        echo "config: $cmdline"
+        echo ">>>> $cmdline"
         $cmdline 1> $stdout 2> $stderr
         command_ret=$?
         echo "command_ret: $?"
@@ -112,16 +119,17 @@ runtest ()
             echo "Using function teardown()"
             teardown $command_ret
         else
-            echo "Using default teardown(diff)"
-            if [ "$opt_fail" = yes ]; then
+            if [ "$opt_fail" = "yes" ]; then
                 # If it's a 'should-fail' testcase, just check
                 # $command_ret is non-zero
+                echo "Using default teardown(just check ret!=0)"
                 [ $command_ret -ne 0 ]
             elif [ $command_ret -eq 0 ]; then
+                echo "Using default teardown(diff)"
                 # Default behaviour is to check the stdout against
                 # $testname.expected for normal testcase.
-                echo "---- diff $TESTDATA/$testname.expected out-$testname.stdout ----"
-                diff -u $TESTDATA/$testname.expected out-$testname.stdout
+                echo ">>>> diff $expected out-$testname.stdout ----"
+                diff -u $expected out-$testname.stdout
             else
                 false
             fi

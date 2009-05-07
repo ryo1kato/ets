@@ -1,0 +1,19 @@
+# No --overwrite option; shall fail
+
+setup ()
+{
+    echo "should not be overwritten" > $TESTDATA/outfile_name.out
+}
+
+teardown ()
+{
+    echo "should not be overwritten" | diff -u - $TESTDATA/outfile_name.out
+    diff_ret=$?
+
+    grep -q "ERROR: output file $TESTDATA/outfile_name.out already exists" $stderr
+    grep_ret=$?
+
+    rm -f $TESTDATA/outfile_name.out
+
+    [ $diff_ret -eq 0 ] && [ $grep_ret -eq 0 ]
+}

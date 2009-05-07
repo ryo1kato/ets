@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/08 00:52:36.
+#                               Last Change: 2009/05/08 01:36:28.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -143,9 +143,9 @@ if __name__ == "__main__":
              "and path is relative to current directory rather than config file.",
         metavar="FILE")
 
-    parser.add_option("-g", "--gui",
-        action="store_true",
-        help="Show message and errors in GUI")
+    #parser.add_option("-g", "--gui",
+    #    action="store_true",
+    #    help="Show message and errors in GUI")
 
     parser.add_option("-W", "--overwrite",
         action="store_true",
@@ -221,6 +221,12 @@ if __name__ == "__main__":
     ##   If --outfile option is given, it supersedes __OUTPUT_FILE__, and consider to
     ##   relative to current directory.
     ##
+    def check_overwrite_and_open(path, flags):
+        if not opt.overwrite and os.path.exists(path):
+            DIE("output file %s already exists" % path)
+        else:
+            return open(path, flags)
+
     if "__OUTPUT_FILE__" in variables:
         if opt.outfile is not None:
             if opt.outfile_in_config:
@@ -228,12 +234,12 @@ if __name__ == "__main__":
                     "when --outfile-in-config option is enabled")
             else:
                 WARNING("__OUTPUT_FILE__ is overridden by --outfile option")
-            outfd = open(opt.outfile, 'w')
+            outfd = check_overwrite_and_open(opt.outfile, 'w')
         else:
             output_file = variables['__OUTPUT_FILE__']
             if not os.path.isabs(output_file):
                 output_file = os.path.join(os.path.dirname(configpath), output_file)
-            outfd = open(output_file, 'w')
+            outfd = check_overwrite_and_open(output_file, 'w')
     elif opt.outfile_in_config:
         DIE("__OUTPUT_FILE__ is not defined in %s" % configpath)
     else:

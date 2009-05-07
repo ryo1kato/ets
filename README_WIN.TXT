@@ -32,6 +32,6 @@ INSTALL B: File Association.
     3. You can associate ".ets" extention to "pythonw.exe" like this(one line)
 
         "C:\Python25\pythonw.exe" "C:\Programs\ets\ets.py" --gui
-        --outfile-in-config --template-in-config %1
+        --outfile-in-config --template-in-config "%1"
 
       (Tips: Control Panel -> Folder Options -> File Types )

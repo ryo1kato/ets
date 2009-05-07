@@ -77,7 +77,7 @@ ets - an Easy Template System (Windows向けインストール手順書)
   <2> ファイルの関連付けで以下のコマンドラインを拡張子 ets に指定します。
 
         "C:\Python25\pythonw.exe" "C:\Programs\ets\ets.py" --gui
-        --outfile-in-config --template-in-config %1
+        --outfile-in-config --template-in-config "%1"
         (実際は一行で入力)
 
         ※コントロールパネル→フォルダオプション→ファイルの種類

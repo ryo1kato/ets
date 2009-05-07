@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/08 02:34:48.
+#                               Last Change: 2009/05/08 03:10:02.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -114,8 +114,9 @@ def read_values(filedes):
 class MSG:
     def __init__(self, gui=False):
         self.gui=gui
-        root = Tkinter.Tk()
-        root.withdraw()
+        if gui:
+            root = Tkinter.Tk()
+            root.withdraw()
 
     def INFO(self, msg):
         if self.gui:

@@ -3,13 +3,13 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/08 02:22:12.
+#                               Last Change: 2009/05/08 02:34:48.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
 #
 
-VERSION=(0,3)
+VERSION=(0,4)
 
 import optparse
 import sys

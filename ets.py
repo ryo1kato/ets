@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/18 18:58:48.
+#                               Last Change: 2009/05/18 19:06:21.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -296,6 +296,8 @@ if __name__ == "__main__":
 
     try:
         main(opt, args, msg)
+    except SystemExit:
+        pass
     except KeyError, e:
         msg.DIE("Undefined variable is refered: %s" % e)
     except:

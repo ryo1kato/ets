@@ -1,0 +1,7 @@
+my_error_message="ERROR: Undefined variable is refered: 'THIS_IS_NOT_DEFINED'"
+
+teardown ()
+{
+        grep -q -- "$my_error_message" $stderr
+}
+

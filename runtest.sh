@@ -20,7 +20,7 @@
 ##
 
 TEST_CASES="basic undef template_name outfile_name outfile_name__O_opt outfile_name__overwrite"
-TEST_CASES_FAIL="basic__t_opt basic__o_opt undef__fail outfile_name__O_and_o_opt outfile_name__overwrite_no_W"
+TEST_CASES_FAIL="basic__t_opt basic__o_opt undef__fail outfile_name__O_and_o_opt outfile_name__overwrite_no_W keyerror"
 
 PYTHON="python2.5"
 TESTDIR="./test"

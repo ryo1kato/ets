@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/08 03:10:02.
+#                               Last Change: 2009/05/18 18:22:22.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -142,45 +142,7 @@ class MSG:
 
 
 
-if __name__ == "__main__":
-    ##
-    ## Option Parser
-    ##
-    parser = optparse.OptionParser(
-        usage="%prog [OPTIONS] CONFIG [TEMPLATE]",
-        version=("%%prog (Easy Template System) %d.%d" % VERSION) )
-
-    parser.add_option("-i", "--ignore-undef",
-        action="store_true",
-        help="Ignore undefined variables in template.")
-
-    parser.add_option("-t", "--template-in-config",
-        action="store_true",
-        help="Assume __TEMPLATE_FILE__ is defined in config."
-             "Report error otherwise.")
-
-    parser.add_option("-o", "--outfile-in-config",
-        action="store_true",
-        help="Assume __OUTPUT_FILE__ is defined in config."
-             "Report error otherwise.")
-
-    parser.add_option("-O", "--outfile", dest="outfile",
-        help="Write output to FILE. Overwriding __OUTPUT_FILE__"
-             "and path is relative to current directory rather than config file.",
-        metavar="FILE")
-
-    parser.add_option("-g", "--gui",
-        action="store_true",
-        help="Show message and errors in GUI")
-
-    parser.add_option("-W", "--overwrite",
-        action="store_true",
-        help="Overwrite existing output file.")
-
-    (opt, args) = parser.parse_args(sys.argv)
-
-    msg = MSG(opt.gui)
-
+def main(opt, args, msg):
     if len(args) < 2:
         msg.DIE("too few arguments")
 
@@ -289,3 +251,45 @@ if __name__ == "__main__":
         outfd.write( templ.substitute(variables) )
 
     msg.INFO("Success.\n(Output: %s)" % outfile_used)
+
+
+
+if __name__ == "__main__":
+    ##
+    ## Option Parser
+    ##
+    parser = optparse.OptionParser(
+        usage="%prog [OPTIONS] CONFIG [TEMPLATE]",
+        version=("%%prog (Easy Template System) %d.%d" % VERSION) )
+
+    parser.add_option("-i", "--ignore-undef",
+        action="store_true",
+        help="Ignore undefined variables in template.")
+
+    parser.add_option("-t", "--template-in-config",
+        action="store_true",
+        help="Assume __TEMPLATE_FILE__ is defined in config."
+             "Report error otherwise.")
+
+    parser.add_option("-o", "--outfile-in-config",
+        action="store_true",
+        help="Assume __OUTPUT_FILE__ is defined in config."
+             "Report error otherwise.")
+
+    parser.add_option("-O", "--outfile", dest="outfile",
+        help="Write output to FILE. Overwriding __OUTPUT_FILE__"
+             "and path is relative to current directory rather than config file.",
+        metavar="FILE")
+
+    parser.add_option("-g", "--gui",
+        action="store_true",
+        help="Show message and errors in GUI")
+
+    parser.add_option("-W", "--overwrite",
+        action="store_true",
+        help="Overwrite existing output file.")
+
+    (opt, args) = parser.parse_args(sys.argv)
+
+    msg = MSG(opt.gui)
+    main(opt, args, msg)

@@ -3,13 +3,13 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/18 18:53:53.
+#                               Last Change: 2009/05/18 18:58:48.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
 #
 
-VERSION=(0,4)
+VERSION=(0,5)
 
 import optparse
 import sys
@@ -296,8 +296,8 @@ if __name__ == "__main__":
 
     try:
         main(opt, args, msg)
-    #except KeyError, e:
-    #    msg.DIE("Undefined variable is refered: %s" % e)
+    except KeyError, e:
+        msg.DIE("Undefined variable is refered: %s" % e)
     except:
         msg.DIE("Unknown error: %s\n\n%s" \
                 % ( sys.exc_info()[0], traceback.format_exc(sys.exc_info()[2])) )

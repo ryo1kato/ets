@@ -1,0 +1,46 @@
+output_simulated () {
+    cat <<EOF | sed -e "s/@@DATE@@/$now_date/g"                            \
+                    -e "s/@@TIME@@/$now_time/g"                            \
+                    -e "s/@@MODIFIED@@/$st_mtime_date $st_mtime_time/g"    \
+                    -e "s/@@MODIFIED_DATE@@/$st_mtime_date/g"              \
+                    -e "s/@@MODIFIED_TIME@@/$st_mtime_time/g"
+__DATE__ = @@DATE@@
+__TIME__ = @@TIME@@
+
+__MODIFIED__ =       @@MODIFIED@@
+__MODIFIED_DATE__ =  @@MODIFIED_DATE@@
+__MODIFIED_TIME__ =  @@MODIFIED_TIME@@
+EOF
+}
+
+
+setup () {
+    st_mtime=`stat -c %y "test/data/predefined.config"`
+    st_mtime_date=${st_mtime%% *}
+    st_mtime_time_all=${st_mtime#* }
+    st_mtime_time=${st_mtime_time_all%.*}
+
+    now_date=`date '+%Y-%m-%d'`
+    now_time=`date '+%H:%M:%S'`
+    output_simulated > testdata-$testname.expected-1
+}
+
+
+teardown () {
+    now_time=`date '+%H:%M:%S'`
+    output_simulated > testdata-$testname.expected-2
+
+
+    # Diff for the time before and after run the test
+    # hopeing that the test runs within 1 second
+    # in which case, either of diff will success
+
+    diff -u $stdout testdata-$testname.expected-1 ||
+        diff -u $stdout testdata-$testname.expected-2
+    ret=$?
+
+    rm -f testdata-$testname.expected-1
+    rm -f testdata-$testname.expected-2
+
+    return $ret
+}

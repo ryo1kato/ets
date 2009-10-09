@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/10/09 12:43:45.
+#                               Last Change: 2009/10/09 18:19:46.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -17,6 +17,7 @@ import traceback
 import re
 import os
 import string
+import time
 
 import Tkinter
 import tkMessageBox
@@ -187,8 +188,10 @@ def main(opt, args, msg):
                 msg.WARNING("Ignoring __TEMPLATE_FILE__ defined in %s" % configpath)
             if args[2] != '-':
                 infd = open(args[2], 'r')
+                variables['__TEMPLATE_FILE__'] = args[2]
             else:
                 infd = sys.stdin
+                variables['__TEMPLATE_FILE__'] = "<<STDIN>>"
     elif "__TEMPLATE_FILE__" in variables:
         template_name = variables['__TEMPLATE_FILE__']
         template_name_abs = os.path.join(os.path.dirname(configpath), template_name)
@@ -204,6 +207,7 @@ def main(opt, args, msg):
         infd = open(template_path, 'r')
     else:
         infd = sys.stdin
+        variables['__TEMPLATE_FILE__'] = "<<STDIN>>"
 
 
     ##
@@ -226,12 +230,18 @@ def main(opt, args, msg):
                         "when --outfile-in-config option is enabled")
             else:
                 msg.WARNING("__OUTPUT_FILE__ is overridden by --outfile option")
-            outfd = check_overwrite_and_open(opt.outfile, 'w')
             outfile_used = opt.outfile
+            output_file = opt.outfile
+            variables['__OUTPUT_FILE__'] = opt.outfile
         else:
             output_file = variables['__OUTPUT_FILE__']
             if not os.path.isabs(output_file):
                 output_file = os.path.join(os.path.dirname(configpath), output_file)
+
+        if output_file is '-':
+            outfile_used = "standard output"
+            outfd = sys.stdout
+        else:
             outfd = check_overwrite_and_open(output_file, 'w')
             outfile_used = output_file
     elif opt.outfile_in_config:
@@ -239,6 +249,25 @@ def main(opt, args, msg):
     else:
         outfd = sys.stdout
         outfile_used = "standard output"
+        variables['__OUTPUT_FILE__'] = "<<STDOUT>>"
+
+
+    ##
+    ## evaluate special predefined variables
+    ##
+    strf_date = "%Y-%m-%d"
+    strf_time = "%H:%M:%S"
+    strf_datetime = strf_date + " " + strf_time
+
+    local_time = time.localtime(time.time())
+    variables['__DATE__'] = time.strftime(strf_date, local_time)
+    variables['__TIME__'] = time.strftime(strf_time, local_time)
+
+    st = os.stat(configpath)
+    local_mtime = time.localtime(st.st_mtime)
+    variables['__MODIFIED__'] = time.strftime(strf_datetime, local_mtime)
+    variables['__MODIFIED_DATE__'] = time.strftime(strf_date, local_mtime)
+    variables['__MODIFIED_TIME__'] = time.strftime(strf_time, local_mtime)
 
 
     ##

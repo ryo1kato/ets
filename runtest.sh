@@ -19,7 +19,7 @@
 ##    4. "foo.config" is searched.
 ##
 
-TEST_CASES="basic undef template_name outfile_name outfile_name__O_opt outfile_name__overwrite"
+TEST_CASES="basic undef template_name outfile_name outfile_name__O_opt outfile_name__overwrite predefined"
 TEST_CASES_FAIL="basic__t_opt basic__o_opt undef__fail outfile_name__O_and_o_opt outfile_name__overwrite_no_W keyerror"
 
 PYTHON="python2.5"
@@ -146,13 +146,26 @@ runtest ()
 
 ##############################################################################
 case $1 in
-    '')
+    "")
         : ;;
     -k|--keep)
-        opt_keep=yes;;
-    *)
+        opt_keep=yes
+        ;;
+    -f|--fail)
+        opt_failetest=yes
+        ;;
+    -*)
         echo "runtest.sh: ERROR: Unknown option: $1"
         exit 1
+        ;;
+    *)
+        if [ "$opt_failetest" = yes ]; then
+            TEST_CASES=""
+            TEST_CASES_FAIL="$@"
+        else
+            TEST_CASES="$@"
+            TEST_CASES_FAIL=""
+        fi
         ;;
 esac
 

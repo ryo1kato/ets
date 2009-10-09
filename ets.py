@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/05/18 19:06:21.
+#                               Last Change: 2009/10/09 12:43:45.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -61,7 +61,7 @@ class ConfigLines:
 ##
 ## Read configuration file and returns a key-value pair as dictionary.
 ##
-def read_values(filedes):
+def read_variables(filedes):
     defined_variables = dict()
     config = ConfigLines(filedes)
 
@@ -157,7 +157,7 @@ def main(opt, args, msg):
     configpath = args[1]
     configfd = open(configpath, 'r')
     try:
-        variables = read_values(configfd)
+        variables = read_variables(configfd)
     except InvalidFormatException, e:
     #except InvalidFormatException as e:  #for Python3000
         msg.DIE("Config file error: " + e.message);
@@ -222,8 +222,8 @@ def main(opt, args, msg):
     if "__OUTPUT_FILE__" in variables:
         if opt.outfile is not None:
             if opt.outfile_in_config:
-                msg.DIE("Can't pass output filename(--outfile)"
-                    "when --outfile-in-config option is enabled")
+                msg.DIE("You can't give output filename(--outfile), "
+                        "when --outfile-in-config option is enabled")
             else:
                 msg.WARNING("__OUTPUT_FILE__ is overridden by --outfile option")
             outfd = check_overwrite_and_open(opt.outfile, 'w')
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     try:
         main(opt, args, msg)
     except SystemExit:
-        pass
+        raise
     except KeyError, e:
         msg.DIE("Undefined variable is refered: %s" % e)
     except:

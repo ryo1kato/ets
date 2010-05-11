@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2009/10/09 18:19:46.
+#                               Last Change: 2010/05/11 19:14:05.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -50,14 +50,14 @@ class ConfigLines:
         else:
             self.lineno += 1
             line = self.config_lines.pop(0)
-            return ( self.lineno, line )
+            return ( self.lineno, line.rstrip('\r\n') )
 
     def peek_one_line(self):
         if len(self.config_lines) == 0:
             return ( lineno, None )
         else:
             line = self.config_lines[0]
-            return ( self.lineno, line )
+            return ( self.lineno, line.rstrip('\r\n') )
 
 ##
 ## Read configuration file and returns a key-value pair as dictionary.
@@ -89,7 +89,7 @@ def read_variables(filedes):
                 if re.search("^%s$" % eof_mark, line):
                     break
                 else:
-                    heredoc += line
+                    heredoc += line + '\n'
                 defined_variables[name] = heredoc
         elif re.search(REGEX_VALID_ASSIGN, line):
             name, value = line.split('=', 1)

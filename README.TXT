@@ -1,7 +1,7 @@
 ets - an Easy Template System
 
                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-                              Last Change: 2009/10/09 13:16:30.
+                              Last Change: 2012/04/02 17:03:39.
 
 USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
     Use '--help' option for more detail.
@@ -42,15 +42,18 @@ DESCRIPTION
 
 ASSIGNABLE SPECIAL VARIABLES
     __TEMPLATE_FILE__
+        Same as filename specified by the second command line argument.
     __OUTPUT_FILE__
+        Same as filename specified by '-o' command line option.
 
 
 NON-ASSIGNABLE SPECIAL VARIABLES
     __MODIFIED__, __MODIFIED_DATE__, __MODIFIED_TIME__
         Timezone's date or time of config file.
-        Equals to __CONVERSION_DATE__ etc, if input is stdin.
-    __TIME__, __DATE__
-        Date and time of conversion.
+        Equals to __DATE__, __TIME__ etc, if input is stdin.
+
+    __DATETIME__, __DATE__, __TIME__
+        Date and time of command execution.
 
 
 
@@ -81,11 +84,12 @@ HISTORY
 ROADMAP
     ---- v0.6 ----
     * Special variables such as __DATE__
+    * --empty-undef
     * Heredoc support (indent support: <<-EOF )
-    * Recursive variable expansion
 
     ---- v0.7 ----
     * Heredoc support (smart newline handling)
+    * Recursive variable expansion
     * Line-end comment support
 
     ---- v0.8 or later ----
@@ -99,5 +103,6 @@ ROADMAP
 
 
 BUGS
-    * An empty file left undeleted on error
-      (when __OUTPUT_FILE__ or --outfile is specified)
+    * An empty file left undeleted on error,
+      when __OUTPUT_FILE__ or --outfile is specified
+

@@ -1,5 +1,6 @@
 __DATE__ = ${__DATE__}
 __TIME__ = ${__TIME__}
+__DATETIME__ = ${__DATETIME__}
 
 __MODIFIED__ =       ${__MODIFIED__}
 __MODIFIED_DATE__ =  ${__MODIFIED_DATE__}

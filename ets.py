@@ -3,7 +3,7 @@
 #  ets - An Easy Template System
 #
 #                               Ryoicho KATO <Ryoichi.Kato@jp.sony.com>
-#                               Last Change: 2010/05/11 19:14:05.
+#                               Last Change: 2012/04/02 17:08:34.
 #
 # USAGE: ets [OPTIONS] CONFIG [TEMPLATE]
 #    Use '--help' option for more detail.
@@ -262,7 +262,7 @@ def main(opt, args, msg):
     local_time = time.localtime(time.time())
     variables['__DATE__'] = time.strftime(strf_date, local_time)
     variables['__TIME__'] = time.strftime(strf_time, local_time)
-
+    variables['__DATETIME__'] = time.strftime(strf_datetime, local_time)
     st = os.stat(configpath)
     local_mtime = time.localtime(st.st_mtime)
     variables['__MODIFIED__'] = time.strftime(strf_datetime, local_mtime)

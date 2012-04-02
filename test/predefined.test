@@ -6,6 +6,7 @@ output_simulated () {
                     -e "s/@@MODIFIED_TIME@@/$st_mtime_time/g"
 __DATE__ = @@DATE@@
 __TIME__ = @@TIME@@
+__DATETIME__ = @@DATE@@ @@TIME@@
 
 __MODIFIED__ =       @@MODIFIED@@
 __MODIFIED_DATE__ =  @@MODIFIED_DATE@@
